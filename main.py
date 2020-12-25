@@ -4,6 +4,14 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivymd.uix.floatlayout import MDFloatLayout
 import pandas as pd
 from kivy.uix.button import Button
+from kivy.core.window import Window
+from kivymd.uix.behaviors.magic_behavior import MagicBehavior
+from kivymd.uix.card import MDCard
+from kivymd.uix.snackbar import Snackbar
+
+Window.size = (360, 600)
+Window.keyboard_anim_args = {'d': 0.2, 't': 'in_out_expo'}
+Window.softinput_mode = 'below_target'
 
 db = mysql.connector.connect(host="bpjum1fu8uithbn7fk2n-mysql.services.clever-cloud.com", user="utt8pcxyfysh9vwz",
                              passwd="fFYduFGCjwhnyLrc1hIy", database="bpjum1fu8uithbn7fk2n")
@@ -13,6 +21,10 @@ result = []
 
 
 class ScreenManagement(ScreenManager):
+    pass
+
+
+class AnimCard(MagicBehavior, MDCard):
     pass
 
 
@@ -27,8 +39,10 @@ class LogInScreen(Screen):
         if (self.ids.username.text, self.ids.password.text) in result:
             self.ids.password.text = ""
             return 1
+
         else:
-            self.ids.confirmation_logIn.text = "Wrong entry"
+            self.ids.animCard_logIn.shake()
+            Snackbar(text='Verify your credentials').show()
             return 0
 
     def dialog_close(self, obj):
@@ -58,10 +72,11 @@ class Dish_AddScreen(Screen):
             cursor = db.cursor()
             cursor.execute(insertDish, i)
             db.commit()
-            self.ids.confirmation_add.text = "Added Successfully!"
+            Snackbar(text='Added successfully').show()
 
         except:
-            self.ids.confirmation_add.text = "Check the desc"
+            self.ids.animCard_add.shake()
+            Snackbar(text='Already added or not in proper format').show()
 
 
 class Dish_ModifyScreen(Screen):
@@ -80,7 +95,6 @@ class Dish_ModifyScreen(Screen):
         self.ids.availability_switch.active = True if dish_status[3] == 1 else False
 
     def dishModify_cafe(self):
-        self.ids.confirmation_modify.text = ""
         try:
             self.availablity_status_toModify = 1 if self.ids.availability_switch.active == True else 0
             modify = "update dish set price = %s, available = %s where (username, dish) = (%s, %s)"
@@ -88,10 +102,11 @@ class Dish_ModifyScreen(Screen):
                 int(self.ids.dishPrice_modify.text), self.availablity_status_toModify, username_current, self.text)
             self.cursor.execute(modify, modify_details)
             db.commit()
-            self.ids.confirmation_modify.text = "Modified Successfully!"
+            Snackbar(text='Modified successfully').show()
 
         except ValueError:
-            self.ids.confirmation_modify.text = "Error in modifying!"
+            self.ids.animCard_modify.shake()
+            Snackbar(text='Invalid. Check again').show()
 
 
 class Dish_ViewScreen(Screen):
@@ -101,7 +116,8 @@ class Dish_ViewScreen(Screen):
         self.cursor.execute(search)
 
         self.viewData = pd.DataFrame(self.cursor.fetchall()).rename(
-            columns={0: "Dish", 1: "Orders to be delivered"}).sort_values(by="Orders to be delivered",ascending=False).reset_index(drop=True)
+            columns={0: "Dish", 1: "Orders to be delivered"}).sort_values(by="Orders to be delivered",
+                                                                          ascending=False).reset_index(drop=True)
 
         self.ids.container.clear_widgets()
         for i in range(len(self.viewData)):
@@ -116,7 +132,6 @@ class Dish_ViewScreen(Screen):
     def negate(self, instance):
         dishName = " ".join(instance.text.split()[:-1])
         try:
-            self.clear_confirmation()
             negateDelivered = "update dish set order_OutStanding = order_OutStanding - 1 where (username, dish) = (\'" + username_current + "\', \'" + \
                               dishName + "\')"
             self.cursor.execute(negateDelivered)
@@ -125,10 +140,8 @@ class Dish_ViewScreen(Screen):
             db.commit()
 
         except:
-            self.ids.confirmation_view.text = "Orders satisfied!"
-
-    def clear_confirmation(self):
-        self.ids.confirmation_view.text = ""
+            self.ids.animCard_view.shake()
+            Snackbar(text='Orders satisfied').show()
 
 
 screenManager = ScreenManager()
