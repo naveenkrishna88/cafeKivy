@@ -26,7 +26,6 @@ ScreenManager:
         MDLabel:
             text: 'Welcome!'
             font_style: 'H2'
-            font_size: 50
             halign: 'center'
             size_hint_y: None
             height: self.texture_size[1]
@@ -97,7 +96,6 @@ ScreenManager:
             MDLabel:
                 text: 'Welcome!'
                 font_style: 'H2'
-                font_size: 50
                 pos_hint: {'center_y' : 0.5, 'center_x':0.55}
             FunctionsBar:
 
@@ -218,12 +216,7 @@ ScreenManager:
                 padding:'10sp'
                 pos_hint:{'center_x': 0.5, 'center_y': 0.45}
                 size_hint:(0.9, 0.5)
-                ScrollView:
-                    MDList:
-                        GridLayout:
-                            cols: 2
-                            spacing: 10
-                            padding: 10
-                            id: container
+                Carousel:
+                    id: container
 
             FunctionsBar:
