@@ -8,8 +8,9 @@ from kivymd.uix.behaviors.magic_behavior import MagicBehavior
 from kivymd.uix.card import MDCard
 from kivymd.uix.snackbar import Snackbar
 from kivymd.uix.toolbar import MDToolbar, MDBottomAppBar
+from kivymd.uix.gridlayout import GridLayout
 
-Window.size = (360, 600)
+# Window.size = (360, 600)
 Window.keyboard_anim_args = {'d': 0.2, 't': 'in_out_expo'}
 Window.softinput_mode = 'below_target'
 
@@ -111,8 +112,7 @@ class Dish_ModifyScreen(Screen):
         try:
             self.availablity_status_toModify = 1 if self.ids.availability_switch.active == True else 0
             modify = "update dish set price = %s, available = %s where (username, dish) = (%s, %s)"
-            modify_details = (
-                int(self.ids.dishPrice_modify.text), self.availablity_status_toModify, username_current, self.text)
+            modify_details = (int(self.ids.dishPrice_modify.text), self.availablity_status_toModify, username_current, self.text)
             self.cursor.execute(modify, modify_details)
             db.commit()
             Snackbar(text='Modified successfully').show()
@@ -125,21 +125,24 @@ class Dish_ModifyScreen(Screen):
 class Dish_ViewScreen(Screen):
     def on_pre_enter(self):
         self.cursor = db.cursor()
-        search = "select dish, order_OutStanding from dish where username = \'" + username_current + "\'"
+        search = "select dish, order_Outstanding from dish where username = \'" + username_current + "\' and order_Outstanding > 0"
         self.cursor.execute(search)
 
-        self.viewData = pd.DataFrame(self.cursor.fetchall()).rename(
-            columns={0: "Dish", 1: "Orders to be delivered"}).sort_values(by="Orders to be delivered",
-                                                                          ascending=False).reset_index(drop=True)
+        self.viewData = pd.DataFrame(self.cursor.fetchall()).rename(columns={0: "Dish", 1: "Orders to be delivered"}).sort_values(by="Orders to be delivered",ascending=False).reset_index(drop=True)
 
         self.ids.container.clear_widgets()
-        for i in range(len(self.viewData)):
-            if self.viewData.loc[i][1] == 0:
-                break
-            else:
-                text = self.viewData.loc[i][0] + "\n" + str(self.viewData.loc[i][1])
-                items = Button(text=text, size_hint=(0.45, None), halign='center', on_release=self.negate)
-                self.ids.container.add_widget(items)
+
+        k = 0
+        for i in range(0, len(self.viewData), 10):
+            layout = GridLayout(cols=2, spacing=10, padding=10)
+            for j in range(i, i + 10):
+                if j == len(self.viewData):
+                    break
+                text = self.viewData.loc[k][0] + "\n" + str(self.viewData.loc[k][1])
+                items = Button(text=text, size_hint_y=None, height=45, halign='center', on_release=self.negate)
+                layout.add_widget(items)
+                k += 1
+            self.ids.container.add_widget(layout)
 
     def negate(self, instance):
         dishName = " ".join(instance.text.split()[:-1])
