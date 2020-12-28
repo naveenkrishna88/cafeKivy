@@ -1,13 +1,13 @@
 import mysql.connector
 from kivymd.app import MDApp
 from kivy.uix.screenmanager import ScreenManager, Screen
-from kivymd.uix.floatlayout import MDFloatLayout
 import pandas as pd
 from kivy.uix.button import Button
 from kivy.core.window import Window
 from kivymd.uix.behaviors.magic_behavior import MagicBehavior
 from kivymd.uix.card import MDCard
 from kivymd.uix.snackbar import Snackbar
+from kivymd.uix.toolbar import MDToolbar, MDBottomAppBar
 
 Window.size = (360, 600)
 Window.keyboard_anim_args = {'d': 0.2, 't': 'in_out_expo'}
@@ -29,7 +29,6 @@ class AnimCard(MagicBehavior, MDCard):
 
 
 class LogInScreen(Screen):
-
     def getUsername(self):
         global username_current
         username_current = self.ids.username.text
@@ -53,8 +52,23 @@ class ActivityScreen(Screen):
     pass
 
 
-class FunctionsBar(MDFloatLayout):
-    pass
+class TopToolbar(MDToolbar):
+    def logOut(self):
+        MDApp.get_running_app().root.current = 'logIn'
+
+
+class FunctionsBar(MDBottomAppBar):
+    def goToAdd(self):
+        MDApp.get_running_app().root.current = 'activity'
+        MDApp.get_running_app().root.current = 'add_dish'
+
+    def goToModify(self):
+        MDApp.get_running_app().root.current = 'activity'
+        MDApp.get_running_app().root.current = 'modify_dish'
+
+    def goToView(self):
+        MDApp.get_running_app().root.current = 'activity'
+        MDApp.get_running_app().root.current = 'view_dish'
 
 
 class Dish_AddScreen(Screen):
@@ -65,7 +79,6 @@ class Dish_AddScreen(Screen):
         cursor = db.cursor()
 
         try:
-            self.ids.confirmation_add.text = ""
             insertDish = "insert into dish(username, dish, price, available) values (%s, %s, %s, %s)"
             i = (username_current, self.ids.dishName_entry.text.title(), int(self.ids.price_entry.text), "1")
 
@@ -125,8 +138,7 @@ class Dish_ViewScreen(Screen):
                 break
             else:
                 text = self.viewData.loc[i][0] + "\n" + str(self.viewData.loc[i][1])
-                items = Button(text=text, size_hint=(None, None), size=(125, 50), halign='center',
-                               on_release=self.negate)
+                items = Button(text=text, size_hint=(0.45, None), halign='center', on_release=self.negate)
                 self.ids.container.add_widget(items)
 
     def negate(self, instance):
