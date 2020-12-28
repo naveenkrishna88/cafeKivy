@@ -70,165 +70,160 @@ ScreenManager:
                     icon: 'check'
                     pos_hint: {'center_x': 0.5, 'center_y': 0.1}
                     size_hint: (0.8, 0.2)
-                    #height: 45
                     md_bg_color: (128/255.0,128/255.0,1/255.0,1)
                     text_color: (0,0,0,1)
                     on_release: app.root.current = "activity" if root.logIn_verify() else "logIn"
 
+<TopToolbar>:
+    id: top_Toolbar
+    right_action_items: [['power', lambda x: root.logOut()]]
+    elevation: 10
+
 
 <FunctionsBar>:
     id: functions_bar
-    md_bg_color: [128/255.0,128/255.0,128/255.0,0.3]
-    cols: 3
-    bottom: 1
-    MDIconButton:
-        icon: 'power'
-        user_font_size: 40
-        on_release:
-            app.root.current = 'logIn'
-        pos_hint: {'x': 0.8, 'y':0.9}
-    MDIconButton:
-        icon: 'plus'
-        on_release:
-            app.root.current = 'activity'
-            app.root.current = 'add_dish'
-        pos_hint: {'x': 0.15}
-    MDIconButton:
+    MDToolbar:
+        type: 'bottom'
+        left_action_items: [['plus', lambda x: root.goToAdd()]]
+        right_action_items: [['lead-pencil', lambda x: root.goToModify()]]
         icon: 'glasses'
-        on_release:
-            app.root.current = 'activity'
-            app.root.current = 'view_dish'
-        pos_hint: {'x': 0.45}
-    MDIconButton:
-        icon: 'lead-pencil'
-        on_release:
-            app.root.current = 'activity'
-            app.root.current = "modify_dish"
-        pos_hint: {'x': 0.75}
+        on_action_button: root.goToView()
 
 <ActivityScreen>:
     MDScreen:
-        MDLabel:
-            text: 'Welcome!'
-            font_style: 'H2'
-            font_size: 50
-            pos_hint: {'center_y' : 0.5, 'center_x':0.55}
-        FunctionsBar:
+        MDBoxLayout:
+            orientation: 'vertical'
+            TopToolbar:
+            MDLabel:
+                text: 'Welcome!'
+                font_style: 'H2'
+                font_size: 50
+                pos_hint: {'center_y' : 0.5, 'center_x':0.55}
+            FunctionsBar:
 
 <Dish_AddScreen>:
     MDScreen:
-        MDLabel:
-            text: 'Add!'
-            font_style: 'H2'
-            font_size: 50
-            pos_hint: {'center_y' : 0.8, 'center_x':0.55}
-        AnimCard:
-            id: animCard_add
+        MDFloatLayout:
             orientation: 'vertical'
-            padding:'8sp'
-            pos_hint:{'center_x': 0.5, 'center_y': 0.4}
-            size_hint:(0.9, 0.45)
-            GridLayout:
-                rows: 3
-                padding: 25
-                spacing: 20
-                MDTextField:
-                    id: dishName_entry
-                    hint_text: 'Dish\'s name'
-                    multiline: False
-                    size_hint: (0.8,None)
-                    height: '30sp'
-                    normal_color: (0,0,0,1)
-                    foreground_color: (0,0,0,1)
-                    pos_hint: {'center_x': 0.5, 'center_y':0.9}
-                MDTextField:
-                    id: price_entry
-                    hint_text: 'Dish\'s price'
-                    multiline: False
-                    size_hint: (0.8,None)
-                    height: '30sp'
-                    foreground_color: (0,0,0,1)
-                    pos_hint: {'center_x': 0.5, 'center_y':0.7}
-                MDFillRoundFlatButton:
-                    id: addDish_btn
-                    text:'Add Dish'
-                    size_hint: 0.8, 0.2
-                    on_release: root.dishAdd_cafe()
+            TopToolbar:
+                pos_hint: {'top': 1}
+            MDLabel:
+                text: 'Add!'
+                font_style: 'H2'
+                pos_hint: {'center_y' : 0.8, 'center_x':0.55}
+            AnimCard:
+                id: animCard_add
+                orientation: 'vertical'
+                padding:'8sp'
+                pos_hint:{'center_x': 0.5, 'center_y': 0.4}
+                size_hint:(0.9, 0.45)
+                GridLayout:
+                    rows: 3
+                    padding: 25
+                    spacing: 20
+                    MDTextField:
+                        id: dishName_entry
+                        hint_text: 'Dish\'s name'
+                        multiline: False
+                        required: True
+                        normal_color: (0,0,0,1)
+                        foreground_color: (0,0,0,1)
+                        size_hint_x: 0.8
+                        pos_hint: {'center_x': 0.5, 'center_y':0.9}
+                    MDTextField:
+                        id: price_entry
+                        hint_text: 'Dish\'s price'
+                        multiline: False
+                        required: True
+                        foreground_color: (0,0,0,1)
+                        size_hint_x: 0.8
+                        pos_hint: {'center_x': 0.5, 'center_y':0.5}
+                    MDFillRoundFlatButton:
+                        id: addDish_btn
+                        text:'Add Dish'
+                        pos_hint: {'center_x': 0.5, 'center_y': 0.1}
+                        size_hint: (0.8, 0.2)
+                        on_release: root.dishAdd_cafe()
 
-
-        FunctionsBar:
+            FunctionsBar:
 
 
 <Dish_ModifyScreen>:
     MDScreen:
-        MDLabel:
-            text: 'Modify!'
-            font_style: 'H2'
-            font_size: 50
-            pos_hint: {'center_y' : 0.8, 'center_x':0.55}
-        AnimCard:
-            id: animCard_modify
+        MDFloatLayout:
             orientation: 'vertical'
-            padding:'10sp'
-            pos_hint:{'center_x': 0.5, 'center_y': 0.45}
-            size_hint:(0.9, 0.5)
-            RelativeLayout:
-                Spinner:
-                    id: dishNames_spinner
-                    text: 'Select dish to modify'
-                    #values: ['a','b']
-                    size_hint: (0.95, 0.185)
-                    pos_hint: {'x': 0.05, 'center_y': 0.85}
-                    on_text: root.details_filler(dishNames_spinner.text)
+            TopToolbar:
+                pos_hint: {'top': 1}
+            MDLabel:
+                text: 'Modify!'
+                font_style: 'H2'
+                pos_hint: {'center_y' : 0.8, 'center_x':0.55}
+            AnimCard:
+                id: animCard_modify
+                orientation: 'vertical'
+                padding:'10sp'
+                pos_hint:{'center_x': 0.5, 'center_y': 0.45}
+                size_hint:(0.9, 0.5)
+                RelativeLayout:
+                    Spinner:
+                        id: dishNames_spinner
+                        text: 'Select dish to modify'
+                        #values: ['a','b']
+                        size_hint: (0.95, 0.185)
+                        pos_hint: {'x': 0.05, 'center_y': 0.85}
+                        on_text: root.details_filler(dishNames_spinner.text)
 
-                MDTextField:
-                    id: dishPrice_modify
-                    hint_text: "New Price of the dish"
-                    mode: 'rectangle'
-                    hint_text_mode: 'persistent'
-                    size_hint: (0.85, 0.2)
-                    pos_hint: {'x':0.1, 'center_y': 0.6}
+                    MDTextField:
+                        id: dishPrice_modify
+                        hint_text: "New Price of the dish"
+                        mode: 'rectangle'
+                        hint_text_mode: 'persistent'
+                        size_hint: (0.85, 0.2)
+                        pos_hint: {'x':0.1, 'center_y': 0.6}
 
-                MDLabel:
-                    text: "Available?"
-                    font_style: 'H4'
-                    font_size: 20
-                    pos_hint: {'x': 0.07, 'center_y':0.35}
+                    MDLabel:
+                        text: "Available?"
+                        font_style: 'H4'
+                        size_hint_y: 0.2
+                        pos_hint: {'x': 0.07, 'center_y':0.35}
 
-                MDSwitch:
-                    id: availability_switch
-                    pos_hint: {'x': 0.8, 'center_y':0.35}
-                    width: 50
+                    MDSwitch:
+                        id: availability_switch
+                        pos_hint: {'center_x': 0.75, 'center_y':0.35}
+                        size_hint_x: 0.25
 
-                MDIconButton:
-                    icon: 'check'
-                    user_font_size: 40
-                    md_bg_color: (0.5,0.5,0.5,1)
-                    pos_hint: {'center_x': 0.9, 'center_y':0.1}
-                    on_release: root.dishModify_cafe()
+                    MDIconButton:
+                        icon: 'check'
+                        user_font_size: 40
+                        md_bg_color: (0.5,0.5,0.5,1)
+                        pos_hint: {'center_x': 0.9, 'center_y':0.1}
+                        on_release: root.dishModify_cafe()
 
-        FunctionsBar:
+            FunctionsBar:
 
 <Dish_ViewScreen>:
     MDScreen:
-        MDLabel:
-            text: 'View!'
-            font_style: 'H2'
-            font_size: 50
-            pos_hint: {'center_y' : 0.8, 'center_x':0.55}
-
-        AnimCard:
-            id: animCard_view
+        MDFloatLayout:
             orientation: 'vertical'
-            padding:'10sp'
-            pos_hint:{'center_x': 0.5, 'center_y': 0.45}
-            size_hint:(0.9, 0.5)
-            ScrollView:
-                MDList:
-                    cols: 2
-                    spacing: 10
-                    padding: 10
-                    id: container
+            TopToolbar:
+                pos_hint: {'top': 1}
+            MDLabel:
+                text: 'View!'
+                font_style: 'H2'
+                pos_hint: {'center_y' : 0.8, 'center_x':0.55}
 
+            AnimCard:
+                id: animCard_view
+                orientation: 'vertical'
+                padding:'10sp'
+                pos_hint:{'center_x': 0.5, 'center_y': 0.45}
+                size_hint:(0.9, 0.5)
+                ScrollView:
+                    MDList:
+                        GridLayout:
+                            cols: 2
+                            spacing: 10
+                            padding: 10
+                            id: container
 
-        FunctionsBar:
+            FunctionsBar:
