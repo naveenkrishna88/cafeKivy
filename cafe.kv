@@ -1,5 +1,4 @@
 ScreenManager:
-    name: 'screens'
     LogInScreen:
         name: "logIn"
     ActivityScreen:
@@ -10,6 +9,8 @@ ScreenManager:
         name: "modify_dish"
     Dish_ViewScreen:
         name: "view_dish"
+    BillScreen:
+        name: "bill"
 
 
 <LogInScreen>:
@@ -39,9 +40,8 @@ ScreenManager:
             pos_hint:{'center_x': 0.5, 'center_y': 0.4}
             size_hint:(0.9, 0.45)
             GridLayout:
-                rows: 3
+                rows: 4
                 padding: 25
-                spacing: 20
                 MDTextField:
                     id: username
                     hint_text: "Username"
@@ -50,7 +50,7 @@ ScreenManager:
                     required: True
                     icon_right: 'account'
                     multiline: False
-                    size_hint_x: 0.8
+                    size_hint: (0.8, 0.3)
                     pos_hint: {'center_x': 0.5, 'center_y':0.9}
                 MDTextField:
                     id: password
@@ -60,24 +60,32 @@ ScreenManager:
                     icon_right: 'eye-off'
                     password: True
                     required: True
-                    size_hint_x: 0.8
+                    size_hint: (0.8, 0.3)
                     pos_hint: {'center_x': 0.5, 'center_y':0.5}
-
+                MDLabel:
+                    text: ""
+                    size_hint: (0.8, 0.15)
                 MDFillRoundFlatIconButton:
                     id: submit
                     text: 'Log In'
                     icon: 'check'
                     pos_hint: {'center_x': 0.5, 'center_y': 0.1}
-                    size_hint: (0.8, 0.2)
+                    size_hint: (0.8, 0.25)
                     md_bg_color: (128/255.0,128/255.0,1/255.0,1)
                     text_color: (0,0,0,1)
                     on_release: app.root.current = "activity" if root.logIn_verify() else "logIn"
 
+
 <TopToolbar>:
     id: top_Toolbar
-    right_action_items: [['power', lambda x: root.logOut()]]
+    right_action_items: [['magnify-scan', lambda x: root.getOrderNum()], ['power', lambda x: root.logOut()]]
     elevation: 10
 
+<dialogBox>:
+    id: dialogBox
+    MDTextField:
+        input_type: 'number'
+        id: orderNum
 
 <FunctionsBar>:
     id: functions_bar
@@ -97,7 +105,57 @@ ScreenManager:
                 text: 'Welcome!'
                 font_style: 'H2'
                 pos_hint: {'center_y' : 0.5, 'center_x':0.55}
+
             FunctionsBar:
+
+
+<BillScreen>:
+    TopToolbar:
+        pos_hint: {'top': 1}
+
+    BoxLayout:
+        padding: 15
+        size_hint_x: 0.9
+        pos_hint: {'center_x': 0.5, 'center_y': 0.825}
+        MDIcon:
+            icon: 'cash-100'
+            font_size: '75sp'
+
+        MDLabel:
+            id: bill_totalPay
+            font_style: 'H6'
+
+    GridLayout:
+        pos_hint: {'center_x': 0.5, 'center_y': 0.7}
+        cols: 5
+        padding: 20
+        MDLabel:
+            text: 'ID'
+        MDLabel:
+            text: 'Dish'
+        MDLabel:
+            text: 'Qty'
+        MDLabel:
+            text: 'Rate'
+        MDLabel:
+            text: 'Price'
+
+    ScrollView:
+        pos_hint:{'center_x': 0.5, 'center_y': 0.4}
+        size_hint:(1, 0.5)
+        MDList:
+            md_bg_color: (153/255,153/255,153/255,1)
+            id: bill_values
+
+
+    MDFillRoundFlatButton:
+        id: billConfirmBtn
+        text: 'Print bill'
+        md_bg_color: (0,0.75,0.25,1)
+        size_hint_x: 1.25
+        pos_hint: {'center_x': 0.5}
+        on_release: root.printBill()
+
 
 <Dish_AddScreen>:
     MDScreen:
@@ -201,22 +259,32 @@ ScreenManager:
 
 <Dish_ViewScreen>:
     MDScreen:
-        MDFloatLayout:
-            orientation: 'vertical'
-            TopToolbar:
-                pos_hint: {'top': 1}
-            MDLabel:
-                text: 'View!'
-                font_style: 'H2'
-                pos_hint: {'center_y' : 0.8, 'center_x':0.55}
+        MDScrollViewRefreshLayout:
+            id: refresh_layout
+            refresh_callback: root.refreshScreen
+            root_layout: root
 
-            AnimCard:
-                id: animCard_view
+            MDFloatLayout:
                 orientation: 'vertical'
-                padding:'10sp'
-                pos_hint:{'center_x': 0.5, 'center_y': 0.45}
-                size_hint:(0.9, 0.5)
-                Carousel:
-                    id: container
+                TopToolbar:
+                    pos_hint: {'top': 1}
 
-            FunctionsBar:
+                MDLabel:
+                    text: 'View!'
+                    font_style: 'H2'
+                    pos_hint: {'center_y' : 0.8, 'center_x':0.55}
+
+                AnimCard:
+                    id: animCard_view
+                    orientation: 'vertical'
+                    padding:'10sp'
+                    pos_hint:{'center_x': 0.5, 'center_y': 0.45}
+                    size_hint:(0.9, 0.5)
+                    ScrollView:
+                        MDList:
+                            GridLayout:
+                                cols: 2
+                                spacing: 5
+                                id: container
+
+                FunctionsBar:
