@@ -1,8 +1,8 @@
 import mysql.connector
-from datetime import date
+import pandas as pd
+from datetime import date, datetime, timedelta
 from kivymd.app import MDApp
 from kivy.uix.screenmanager import ScreenManager, Screen
-import pandas as pd
 from kivy.core.window import Window
 from kivymd.uix.behaviors.magic_behavior import MagicBehavior
 from kivymd.uix.card import MDCard
@@ -22,8 +22,7 @@ Window.size = (360, 600)
 Window.keyboard_anim_args = {'d': 0.2, 't': 'in_out_expo'}
 Window.softinput_mode = 'below_target'
 
-db = mysql.connector.connect(host="bpjum1fu8uithbn7fk2n-mysql.services.clever-cloud.com", user="utt8pcxyfysh9vwz",
-                             passwd="fFYduFGCjwhnyLrc1hIy", database="bpjum1fu8uithbn7fk2n")
+db = mysql.connector.connect(host="btyjrjkqioozicbjpsyz-mysql.services.clever-cloud.com", user="utt8pcxyfysh9vwz",passwd="fFYduFGCjwhnyLrc1hIy", database="btyjrjkqioozicbjpsyz")
 
 username_current = ""
 result = []
@@ -89,7 +88,6 @@ class TopToolbar(MDToolbar):
     def verifyOrder(self, dialogRef):
         global orderNum_current
         orderNum_current = self.dialog.content_cls.ids.orderNum.text
-        # print(orderNum_current)
         self.dialog.dismiss()
         MDApp.get_running_app().root.current = "bill"
 
@@ -99,12 +97,10 @@ class BillScreen(Screen):
 
     orderDetails = None
     
-    def on_enter(self):
-        # print("In Bill Screen", orderNum_current, username_current)
+    def on_pre_enter(self):
 
         orderNum = str(orderNum_current) + str(date.today().year) + str(date.today().month) + str(date.today().day)
         db.cmd_reset_connection()
-        # print(orderNum)
 
         fetchOrder_statement = "select dish.dishID, orderDishTable.dish, orderDishTable.quantity, dish.price from orderDishTable left join dish on dish.dish = orderDishTable.dish where dish.username = %s and orderDishTable.ordernum in (select ordernum from orderDetailsTimeTable where orderStatus = 1 and ordernum = %s);"
         cursor = db.cursor()
@@ -132,14 +128,7 @@ class BillScreen(Screen):
 
     def printBill(self):
         global username_current, orderNum_current
-        # print(str(orderNum_current) + str(date.today().year) + str(date.today().month) + str(date.today().day))
         cursor = db.cursor()
-        # print(self.orderDetails)
-        for i in range(len(self.orderDetails)):
-            alterOutstanding_statement = "update dish set orderOutStanding = orderOutStanding - %s where dish = %s and username = %s"
-            alterOutstanding_details = (str(self.orderDetails.loc[i, "Quantity"]), self.orderDetails.loc[i, "Dish"], username_current)
-            # print(alterOutstanding_details)
-            cursor.execute(alterOutstanding_statement, alterOutstanding_details)
         cursor.execute("update orderDetailsTimeTable set orderStatus = 0 where ordernum = %s", (str(orderNum_current) + str(date.today().year) + str(date.today().month) + str(date.today().day),))
         db.commit()
         Snackbar(text="Order completed").show()
@@ -166,8 +155,8 @@ class Dish_AddScreen(Screen):
 
         cursor = db.cursor()
         try:
-            insertDish = "insert into dish(username, dish, price, available) values (%s, %s, %s, %s)"
-            i = (username_current, self.ids.dishName_entry.text.title(), int(self.ids.price_entry.text), "1")
+            insertDish = "insert into dish(username, dish, price, available, dishID) values (%s, %s, %s, %s, %s)"
+            i = (username_current, self.ids.dishName_entry.text.title(), int(self.ids.price_entry.text), "1", str(self.ids.dishID_entry.text))
 
             cursor = db.cursor()
             cursor.execute(insertDish, i)
@@ -219,14 +208,11 @@ class Dish_ViewScreen(Screen):
         db.cmd_reset_connection()
 
         cursor = db.cursor()
-        cursor.execute("update orderDetailsTimeTable set orderStatus = -1 where timeTakeAway < date_sub(now(), interval 30 minute) and hotelName = %s", (username_current,))
+        cursor.execute("update orderDetailsTimeTable set orderStatus = -1 where timeTakeAway < %s", ((datetime.now() - timedelta(minutes=30),)))
         db.commit()
 
         try:
-            # print(username_current)
-            # print(destroyOldOrders)
-            search = "select dish, orderOutstanding from dish where username = %s and orderOutstanding > 0"
-            cursor.execute(search, (username_current,))
+            cursor.execute("select orderDishTable.dish, sum(orderDishTable.quantity) from orderDishTable left join orderDetailsTimeTable on orderDetailsTimeTable.ordernum = orderDishTable.ordernum  where orderDetailsTimeTable.orderStatus = 1 and orderDetailsTimeTable.hotelName = %s and orderDetailsTimeTable.timeTakeAway < %s group by orderDishTable.dish",(username_current, datetime.now() + timedelta(minutes=30)))
 
             self.viewData = pd.DataFrame(cursor.fetchall()).rename(columns={0: "Dish", 1: "Orders to be delivered"}).sort_values(by="Orders to be delivered",ascending=False).reset_index(drop=True)
             cursor.close()
@@ -253,36 +239,11 @@ class Dish_ViewScreen(Screen):
 
         Clock.schedule_once(refresh,1)
 
-    # def negate(self, instance):
-    #
-    #     dishName = " ".join(instance.text.split()[:-1])
-    #     try:
-    #         negateDelivered = "update dish set orderOutstanding = orderOutstanding - 1 where (username, dish) = (\'" + username_current + "\', \'" + \
-    #                           dishName + "\')"
-    #         self.cursor.execute(negateDelivered)
-    #         instance.text = dishName + "\n" + str(int(instance.text.split()[-1]) - 1)
-    #         self.viewData.loc[(self.viewData['Dish'] == dishName), "Orders to be delivered"] -= 1
-    #         db.commit()
-    #
-    #     except:
-    #         self.ids.animCard_view.shake()
-    #         Snackbar(text='Orders satisfied').show()
-
-
-screenManager = ScreenManager()
-screenManager.add_widget(LogInScreen(name='logIn'))
-screenManager.add_widget(ActivityScreen(name='activity'))
-screenManager.add_widget(Dish_AddScreen(name='add_dish'))
-screenManager.add_widget(Dish_ModifyScreen(name='modify_dish'))
-screenManager.add_widget(Dish_ViewScreen(name='view_dish'))
-
 
 class cafeApp(MDApp):
     def build(self):
         global result
-        # print(MDApp.get_running_app().root.ids)
         self.theme_cls.primary_palette = 'BlueGray'
-        # self.theme_cls.primary_hue = '500'
         local_cursor = db.cursor()
         local_cursor.execute("select * from login")
         result = local_cursor.fetchall()
