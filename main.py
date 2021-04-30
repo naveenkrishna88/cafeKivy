@@ -208,7 +208,7 @@ class Dish_ViewScreen(Screen):
         db.cmd_reset_connection()
 
         cursor = db.cursor()
-        cursor.execute("update orderDetailsTimeTable set orderStatus = -1 where timeTakeAway < %s", ((datetime.now() - timedelta(minutes=30),)))
+        cursor.execute("update orderDetailsTimeTable set orderStatus = -1 where (timeTakeAway < %s and orderStatus = 1)", ((datetime.now() - timedelta(minutes=30),)))
         db.commit()
 
         try:
